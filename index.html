@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Top 8 — Rumeurs mercato NBA</title>
+<title>Top 8 — Plus grosses infos du début de Free Agency</title>
 <style>
   :root{
     --bg:#ffffff; --panel:#f6f7f9; --panel2:#ffffff; --line:#e3e7ec;
@@ -132,8 +132,8 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Top 8 — Rumeurs mercato <b>NBA</b></h1>
-    <p>Glisse les 8 rumeurs pour composer ton classement, de la plus crédible à la plus folle.</p>
+    <h1>Top 8 — Plus grosses infos du début de <b>Free Agency</b></h1>
+    <p>Glisse les 8 moves par ordre d'importance pour toi.</p>
   </header>
 
   <div class="board">
@@ -290,15 +290,15 @@ document.addEventListener('pointerdown', onDown);
 document.getElementById('resetBtn').addEventListener('click', ()=>{ pool = ITEMS.map(p=>p.id); ranking = new Array(SLOTS).fill(null); render(); });
 
 /* ---------- partage ---------- */
-const CONFIG = { shareUrl:"", hashtags:"NBA,Mercato" };
+const CONFIG = { shareUrl:"", hashtags:"NBA,FreeAgency" };
 let HOST_URL = "";
 try{ if(document.referrer){ const r=new URL(document.referrer); if(r.origin!==location.origin) HOST_URL=document.referrer; } }catch(_){}
 const shareUrl = () => HOST_URL || CONFIG.shareUrl || location.href;
 function rankedItems(){ return ranking.filter(Boolean).map(id=>byId[id]); }
 function shareText(){
   const list = rankedItems();
-  if(!list.length) return "Compose ton Top 8 des rumeurs mercato NBA !";
-  let t = "Mon Top 8 des rumeurs mercato NBA :\n";
+  if(!list.length) return "Compose ton Top 8 des plus grosses infos du début de Free Agency !";
+  let t = "Mon Top 8 des plus grosses infos du début de Free Agency :\n";
   list.forEach((p,i)=>{ t += `${i+1}. ${p.name} ${p.rumor}\n`; });
   return t.trim();
 }
@@ -334,11 +334,11 @@ async function buildCanvas(){
   const ctx=cv.getContext('2d'); ctx.scale(scale,scale);
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
   ctx.textBaseline='alphabetic';
-  const t1='Top 8 — Rumeurs mercato ', t2='NBA';
-  ctx.font='800 27px '+FONT; const w1=ctx.measureText(t1).width, w2=ctx.measureText(t2).width; let tx=(W-(w1+w2))/2;
-  ctx.textAlign='left'; ctx.fillStyle=INK; ctx.fillText(t1,tx,54); ctx.fillStyle=RED; ctx.fillText(t2,tx+w1,54);
+  const t1='Top 8 — Plus grosses infos du début de ', t2='Free Agency';
+  ctx.font='800 20px '+FONT; const w1=ctx.measureText(t1).width, w2=ctx.measureText(t2).width; let tx=(W-(w1+w2))/2;
+  ctx.textAlign='left'; ctx.fillStyle=INK; ctx.fillText(t1,tx,52); ctx.fillStyle=RED; ctx.fillText(t2,tx+w1,52);
   ctx.textAlign='center'; ctx.fillStyle=MUT; ctx.font='400 13px '+FONT;
-  ctx.fillText('Mon classement des rumeurs du mercato NBA', W/2, 80);
+  ctx.fillText('Mes moves classés par ordre d\'importance', W/2, 78);
   ctx.strokeStyle='#e3e7ec'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,100); ctx.lineTo(W-pad,100); ctx.stroke();
   if(!list.length){ ctx.textAlign='center'; ctx.fillStyle=MUT; ctx.font='600 16px '+FONT; ctx.fillText('Aucune rumeur classée.', W/2, listTop+40); }
   const medal=['#e0a200','#8a93a0','#c07a3e'];
@@ -366,8 +366,8 @@ async function shareNative(){
   try{
     const cv=await buildCanvas(); const blob=await canvasToBlob(cv);
     const file=new File([blob],'top8-mercato-nba.png',{type:'image/png'}); const text=shareText()+'\n'+shareUrl();
-    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({title:'Top 8 — Rumeurs mercato NBA', text, files:[file]});
-    else if(navigator.share) await navigator.share({title:'Top 8 — Rumeurs mercato NBA', text:shareText(), url:shareUrl()});
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({title:'Top 8 — Plus grosses infos du début de Free Agency', text, files:[file]});
+    else if(navigator.share) await navigator.share({title:'Top 8 — Plus grosses infos du début de Free Agency', text:shareText(), url:shareUrl()});
     else { const a=document.createElement('a'); a.download=file.name; a.href=cv.toDataURL('image/png'); a.click(); flash('✓ Image téléchargée !'); }
   }catch(err){ if(!err || err.name!=='AbortError'){ flash('Partage indisponible'); console.error(err); } }
   finally{ b.disabled=false; b.innerHTML=old; }
