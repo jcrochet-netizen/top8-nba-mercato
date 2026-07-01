@@ -422,8 +422,8 @@ document.getElementById('backBtn').addEventListener('click', showBuild);
 const CONFIG = {
   shareUrl:"",
   hashtags:"NBA,FreeAgency",
-  // ▼▼ URL /exec de la Web App Google Apps Script (nouveau Sheet dédié à ce widget) ▼▼
-  votesUrl:"",
+  // ▼▼ URL /exec de la Web App Google Apps Script (Sheet dédié à ce widget) ▼▼
+  votesUrl:"https://script.google.com/macros/s/AKfycbzrrF18njQ3CHRKSinYSAzMEN_ulO8upZg7xmupDrKER-7XcOcd4yEYvZsyt8hHqmgMTg/exec",
 };
 let HOST_URL = "";
 try{ if(document.referrer){ const r=new URL(document.referrer); if(r.origin!==location.origin) HOST_URL=document.referrer; } }catch(_){}
