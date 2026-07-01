@@ -50,6 +50,8 @@
   .card .nm{font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .card .ru{font-size:11px; color:var(--accent); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .card .grip{color:#b3bbc5; font-size:14px; margin-left:2px}
+  .more{display:inline-block; margin-top:3px; font-size:10px; font-weight:600; color:var(--accent2); text-decoration:none; cursor:pointer}
+  .more:hover{text-decoration:underline}
 
   /* ---- Ranking (right) ---- */
   #ranking{display:flex; flex-direction:column; gap:6px}
@@ -214,14 +216,14 @@
 
 <script>
 const ITEMS = [
-  {id:"lebron",  name:"LeBron James",          rumor:"quitte les Lakers",     img:"img/lebron.png"},
-  {id:"kawhi",   name:"Kawhi Leonard",         rumor:"revient aux Raptors",   img:"img/kawhi.png"},
-  {id:"morant",  name:"Ja Morant",             rumor:"transféré aux Blazers", img:"img/morant.png"},
-  {id:"giannis", name:"Giannis Antetokounmpo", rumor:"débarque au Heat",      img:"img/giannis.png"},
-  {id:"lamelo",  name:"LaMelo Ball",           rumor:"transféré aux Wolves",  img:"img/lamelo.png"},
-  {id:"randle",  name:"Julius Randle",         rumor:"envoyé aux Nets",       img:"img/randle.png"},
-  {id:"bridges", name:"Miles Bridges",         rumor:"bradé aux Suns",        img:"img/bridges.png"},
-  {id:"kuminga", name:"Jonathan Kuminga",      rumor:"libéré",                img:"img/kuminga.png"},
+  {id:"lebron",  name:"LeBron James",          rumor:"quitte les Lakers",     img:"img/lebron.png",  url:"https://www.basketusa.com/news/848785/lebron-james-quitte-les-lakers-mais-continue-sa-carriere/"},
+  {id:"kawhi",   name:"Kawhi Leonard",         rumor:"revient aux Raptors",   img:"img/kawhi.png",   url:"https://www.basketusa.com/news/848819/kawhi-leonard-de-retour-aux-raptors/"},
+  {id:"morant",  name:"Ja Morant",             rumor:"transféré aux Blazers", img:"img/morant.png",  url:"https://www.basketusa.com/news/848541/ja-morant-transfere-aux-blazers/"},
+  {id:"giannis", name:"Giannis Antetokounmpo", rumor:"débarque au Heat",      img:"img/giannis.png", url:"https://www.basketusa.com/news/846738/giannis-antetokounmpo-transfere-a-miami/"},
+  {id:"lamelo",  name:"LaMelo Ball",           rumor:"transféré aux Wolves",  img:"img/lamelo.png",  url:"https://www.basketusa.com/news/847571/lamelo-ball-transfere-aux-wolves/"},
+  {id:"randle",  name:"Julius Randle",         rumor:"envoyé aux Nets",       img:"img/randle.png",  url:"https://www.basketusa.com/news/846712/julius-randle-transfere-chez-les-nets-nic-claxton-debarque-chez-les-bulls/"},
+  {id:"bridges", name:"Miles Bridges",         rumor:"bradé aux Suns",        img:"img/bridges.png", url:"https://www.basketusa.com/news/848204/les-suns-recuperent-miles-bridges-et-allegent-leur-facture/"},
+  {id:"kuminga", name:"Jonathan Kuminga",      rumor:"libéré",                img:"img/kuminga.png", url:"https://www.basketusa.com/news/848546/les-hawks-liberent-jonathan-kuminga/"},
 ];
 const SLOTS = 8;
 
@@ -239,7 +241,8 @@ function render(){
     const p = byId[id];
     return `<div class="card" data-id="${id}" data-from="pool">
       ${photo(p)}
-      <div class="info"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div></div>
+      <div class="info"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div>
+        <a class="more" href="${p.url}" target="_blank" rel="noopener noreferrer">Plus d'infos sur le move ↗</a></div>
       <div class="grip">⠿</div>
     </div>`;
   }).join('') || `<div style="font-size:11px;color:var(--muted);opacity:.6;padding:6px">Tout est classé ✓</div>`;
@@ -254,7 +257,8 @@ function render(){
       <div class="rank">${r}</div>
       <div class="slotcard" data-id="${id}" data-from="${i}">
         ${photo(p)}
-        <div class="info" style="min-width:0;flex:1"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div></div>
+        <div class="info" style="min-width:0;flex:1"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div>
+          <a class="more" href="${p.url}" target="_blank" rel="noopener noreferrer">Plus d'infos sur le move ↗</a></div>
       </div>
       <button class="rm" title="Retirer" data-remove="${i}">✕</button>
     </div>`;
@@ -285,7 +289,7 @@ let drag = null; const THRESH = 6;
 function point(e){ return {x:e.clientX, y:e.clientY}; }
 function onDown(e){
   const handle = e.target.closest('.card, .slotcard');
-  if(!handle || e.target.closest('.rm')) return;
+  if(!handle || e.target.closest('.rm') || e.target.closest('a')) return;
   const id = handle.dataset.id, from = handle.dataset.from;
   const pt = point(e);
   drag = {id, from, startX:pt.x, startY:pt.y, started:false, clone:null, src:handle};
@@ -375,7 +379,8 @@ function renderRecap(tally){
   document.getElementById('recapList').innerHTML = computeConsensus(tally).map(c=>{
     const p=c.p;
     return `<div class="rrow" data-r="${c.rank}"><div class="rk">${c.rank}</div>${photo(p)}
-      <div class="info"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div></div></div>`;
+      <div class="info"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div>
+        <a class="more" href="${p.url}" target="_blank" rel="noopener noreferrer">Plus d'infos sur le move ↗</a></div></div>`;
   }).join('');
 }
 async function loadResults(){
