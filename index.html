@@ -87,6 +87,34 @@
   .toolbar{display:flex; gap:8px; margin-top:12px; justify-content:center}
   .btn{border:1px solid var(--line); background:var(--panel2); color:var(--txt); font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer}
   .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700}
+  .btn.primary:hover{filter:brightness(.94)}
+  .btn:disabled{opacity:.55; cursor:default; filter:none}
+  .hint{text-align:center; font-size:11px; color:var(--muted); margin-top:6px; min-height:14px}
+
+  /* ---- Écran récap (vote communauté) ---- */
+  .recap{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px}
+  .recap-head{display:flex; align-items:center; gap:8px}
+  .recap-title{font-size:14px; font-weight:800}
+  .recap-sub{font-size:11px; color:var(--muted); margin:4px 0 2px; line-height:1.4}
+  .recap-note{font-size:11px; color:var(--accent2); margin:9px 0 0}
+  .recap-loading{font-size:12px; color:var(--muted); padding:16px; text-align:center}
+  .live{margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--accent); white-space:nowrap}
+  .live .dot{position:relative; width:8px; height:8px; border-radius:50%; background:var(--accent); flex:0 0 8px}
+  .live .dot::after{content:''; position:absolute; inset:0; border-radius:50%; background:var(--accent); animation:livePulse 1.6s ease-out infinite}
+  @keyframes livePulse{0%{transform:scale(1); opacity:.65} 100%{transform:scale(2.8); opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .live .dot::after{animation:none} }
+  #recapList{margin-top:10px}
+  .rrow{display:flex; align-items:center; gap:9px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:7px 9px; margin-bottom:6px}
+  .rrow .rk{flex:0 0 22px; text-align:center; font-weight:800; font-size:16px; color:var(--muted); font-variant-numeric:tabular-nums}
+  .rrow[data-r="1"] .rk{color:var(--gold)}
+  .rrow[data-r="2"] .rk{color:var(--silver)}
+  .rrow[data-r="3"] .rk{color:var(--bronze)}
+  .rrow .ph{width:36px; height:36px; border-radius:50%; flex:0 0 36px; overflow:hidden; border:1px solid var(--line); background:#eef1f4}
+  .rrow .ph img{width:100%; height:100%; object-fit:cover; object-position:50% 12%; display:block}
+  .rrow .info{min-width:0; flex:1}
+  .rrow .nm{font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .rrow .ru{font-size:10.5px; color:var(--accent); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 
   .share{margin-top:14px; text-align:center}
   .share h4{margin:0 0 9px; font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); font-weight:700}
@@ -136,6 +164,7 @@
     <p>Glisse les 8 moves par ordre d'importance pour toi.</p>
   </header>
 
+  <div id="viewBuild">
   <div class="board">
     <section class="col">
       <h2>Rumeurs <span class="cnt" id="poolCnt">8</span></h2>
@@ -149,6 +178,22 @@
 
   <div class="toolbar">
     <button class="btn" id="resetBtn">Réinitialiser</button>
+    <button class="btn primary" id="validateBtn" disabled>Valider mon Top 8</button>
+  </div>
+  <div class="hint" id="validateHint"></div>
+  </div><!-- /viewBuild -->
+
+  <div id="viewRecap" hidden>
+    <div class="recap">
+      <div class="recap-head">
+        <div class="recap-title">Le Top 8 de la communauté</div>
+        <span class="live"><span class="dot"></span>En direct</span>
+      </div>
+      <div class="recap-sub">Classement par points : 8 pts pour un 1er, 7 pts pour un 2e… 1 pt pour un 8e, cumulés sur tous les votes.</div>
+      <div class="recap-note" id="recapNote"></div>
+      <div id="recapList"></div>
+      <div class="toolbar"><button class="btn" id="backBtn">← Modifier mon classement</button></div>
+    </div>
   </div>
 
   <div class="share">
@@ -215,8 +260,11 @@ function render(){
     </div>`;
   }).join('');
 
+  const filled = ranking.filter(Boolean).length;
   document.getElementById('poolCnt').textContent = pool.length;
-  document.getElementById('rankCnt').textContent = ranking.filter(Boolean).length + '/'+SLOTS;
+  document.getElementById('rankCnt').textContent = filled + '/'+SLOTS;
+  const vb=document.getElementById('validateBtn'); if(vb) vb.disabled = filled<SLOTS;
+  const vh=document.getElementById('validateHint'); if(vh) vh.textContent = filled<SLOTS ? ('Classe les '+SLOTS+' moves pour valider') : '';
 }
 
 /* placement */
@@ -289,8 +337,94 @@ $pool.addEventListener('dblclick', e=>{
 document.addEventListener('pointerdown', onDown);
 document.getElementById('resetBtn').addEventListener('click', ()=>{ pool = ITEMS.map(p=>p.id); ranking = new Array(SLOTS).fill(null); render(); });
 
+/* ================================================================
+   VALIDER → ENVOI DU VOTE + ÉCRAN RECAP (Google Sheet via Apps Script)
+   Classement communauté par points (Borda) : 1er = SLOTS pts … dernier = 1 pt.
+   ================================================================ */
+const VOTED_KEY = 'top8voted_v1';
+
+function submitVote(){
+  if(!CONFIG.votesUrl) return;
+  if(localStorage.getItem(VOTED_KEY)) return;                 // 1 vote par navigateur
+  const rk = rankedItems().map((p,i)=>({rank:i+1, id:p.id, name:p.name+' '+p.rumor}));
+  if(!rk.length) return;
+  const session = 't8-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  try{
+    fetch(CONFIG.votesUrl, {method:'POST', mode:'no-cors', keepalive:true,
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({session, ranking:rk, lang:'fr'})});
+    localStorage.setItem(VOTED_KEY, '1');
+  }catch(_){}
+}
+function mergeOwnVote(base){
+  const t = JSON.parse(JSON.stringify(base||{}));
+  rankedItems().forEach((p,i)=>{ const r=i+1; if(!t[p.id]) t[p.id]={}; t[p.id][r]=(t[p.id][r]||0)+1; });
+  return t;
+}
+function computeConsensus(tally){
+  const scored = ITEMS.map(p=>{
+    const ranks = tally[p.id] || {};
+    let points=0, ballots=0;
+    for(const r in ranks){ const c=ranks[r]; points += c*(SLOTS+1-Number(r)); ballots += c; }
+    return {p, points, ballots};
+  }).filter(s => s.points>0);
+  scored.sort((a,b)=> b.points-a.points || b.ballots-a.ballots);
+  return scored.slice(0,SLOTS).map((s,i)=>({rank:i+1, p:s.p}));
+}
+function renderRecap(tally){
+  document.getElementById('recapList').innerHTML = computeConsensus(tally).map(c=>{
+    const p=c.p;
+    return `<div class="rrow" data-r="${c.rank}"><div class="rk">${c.rank}</div>${photo(p)}
+      <div class="info"><div class="nm">${p.name}</div><div class="ru">${p.rumor}</div></div></div>`;
+  }).join('');
+}
+async function loadResults(){
+  const note=document.getElementById('recapNote');
+  document.getElementById('recapList').innerHTML = `<div class="recap-loading">Chargement des résultats…</div>`;
+  note.textContent='';
+  let serverTally=null, serverVotes=0, ok=false;
+  if(CONFIG.votesUrl){
+    try{
+      const sep = CONFIG.votesUrl.includes('?') ? '&' : '?';
+      const r = await fetch(CONFIG.votesUrl + sep + '_=' + Date.now(), {method:'GET'});
+      const data = await r.json();
+      if(data && data.ok){ serverTally=data.tally||{}; serverVotes=+data.votes||0; ok=true; }
+    }catch(_){}
+  }
+  let tally;
+  if(ok && serverVotes>0){ tally=serverTally; }
+  else {
+    tally=mergeOwnVote({});
+    if(!CONFIG.votesUrl) note.textContent = 'En attente de connexion au Google Sheet — seul votre vote est affiché.';
+    else if(!ok)         note.textContent = 'Résultats de la communauté indisponibles pour le moment. Affichage de votre vote.';
+  }
+  renderRecap(tally);
+  postHeight();
+}
+function showRecap(){
+  submitVote();
+  document.getElementById('viewBuild').hidden = true;
+  document.getElementById('viewRecap').hidden = false;
+  window.scrollTo(0,0);
+  setTimeout(loadResults, CONFIG.votesUrl ? 800 : 0);
+  postHeight();
+}
+function showBuild(){
+  document.getElementById('viewRecap').hidden = true;
+  document.getElementById('viewBuild').hidden = false;
+  window.scrollTo(0,0);
+  postHeight();
+}
+document.getElementById('validateBtn').addEventListener('click', showRecap);
+document.getElementById('backBtn').addEventListener('click', showBuild);
+
 /* ---------- partage ---------- */
-const CONFIG = { shareUrl:"", hashtags:"NBA,FreeAgency" };
+const CONFIG = {
+  shareUrl:"",
+  hashtags:"NBA,FreeAgency",
+  // ▼▼ URL /exec de la Web App Google Apps Script (nouveau Sheet dédié à ce widget) ▼▼
+  votesUrl:"",
+};
 let HOST_URL = "";
 try{ if(document.referrer){ const r=new URL(document.referrer); if(r.origin!==location.origin) HOST_URL=document.referrer; } }catch(_){}
 const shareUrl = () => HOST_URL || CONFIG.shareUrl || location.href;
