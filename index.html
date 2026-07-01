@@ -164,7 +164,7 @@
     <div id="shMsg"></div>
   </div>
 
-  <div class="foot">Données : balldontlie.io · Photos : NBA</div>
+  <div class="foot"></div>
 </div>
 
 <script>
@@ -202,7 +202,7 @@ function render(){
   $rank.innerHTML = ranking.map((id,i)=>{
     const r = i+1;
     if(id==null){
-      return `<div class="slot" data-rank="${r}" data-slot="${i}"><div class="rank">${r}</div><div class="empty">Glisse une rumeur ici</div></div>`;
+      return `<div class="slot" data-rank="${r}" data-slot="${i}"><div class="rank">${r}</div><div class="empty">Glisse le move ici</div></div>`;
     }
     const p = byId[id];
     return `<div class="slot filled" data-rank="${r}" data-slot="${i}">
@@ -328,7 +328,7 @@ async function buildCanvas(){
   const list = rankedItems();
   const imgs = {}; await Promise.all(list.map(async p=>{ imgs[p.id]=await loadImg(p.img); }));
   const RED='#c8102e', INK='#14181f', MUT='#6b7682';
-  const scale=2, W=680, pad=40, headH=118, rowH=64, rowGap=8, listTop=headH+8, footerH=54;
+  const scale=2, W=680, pad=40, headH=118, rowH=64, rowGap=8, listTop=headH+8, footerH=22;
   const n=Math.max(list.length,1), H=listTop + n*rowH + (n-1)*rowGap + footerH;
   const cv=document.createElement('canvas'); cv.width=W*scale; cv.height=H*scale;
   const ctx=cv.getContext('2d'); ctx.scale(scale,scale);
@@ -352,8 +352,6 @@ async function buildCanvas(){
     ctx.fillStyle=INK; ctx.font='700 17px '+FONT; ctx.textBaseline='alphabetic'; ctx.fillText(ellipsize(ctx,p.name,W-2*pad-170), nx, y+27);
     ctx.fillStyle=RED; ctx.font='600 13.5px '+FONT; ctx.fillText(ellipsize(ctx,p.rumor,W-2*pad-170), nx, y+47);
   });
-  ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillStyle=MUT; ctx.font='400 12px '+FONT;
-  ctx.fillText('Données : balldontlie.io · Photos : NBA', W/2, H-20);
   return cv;
 }
 const canvasToBlob = cv => new Promise(r=>cv.toBlob(r,'image/png'));
