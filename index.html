@@ -178,7 +178,7 @@
   <header>
     <div class="head-main">
       <h1>Plus grosses infos du début de <span style="color:#2d83c1">Free Agency</span></h1>
-      <p>Glisse les 8 moves par ordre d'importance pour toi.</p>
+      <p>Glisse les 10 moves par ordre d'importance pour toi.</p>
     </div>
     <a class="bet365" href="https://www.basketusa.com/go-bet365fr" target="_blank" rel="nofollow sponsored noopener noreferrer">
       <span class="lbl">Parier sur la NBA avec</span>
@@ -193,14 +193,14 @@
       <div id="pool"></div>
     </section>
     <section class="col">
-      <h2>Mon Top 8 <span class="cnt" id="rankCnt">0/8</span></h2>
+      <h2>Mon Top 10 <span class="cnt" id="rankCnt">0/10</span></h2>
       <div id="ranking"></div>
     </section>
   </div>
 
   <div class="toolbar">
     <button class="btn" id="resetBtn">Réinitialiser</button>
-    <button class="btn primary" id="validateBtn" disabled>Valider mon Top 8</button>
+    <button class="btn primary" id="validateBtn" disabled>Valider mon Top 10</button>
   </div>
   <div class="hint" id="validateHint"></div>
   </div><!-- /viewBuild -->
@@ -208,10 +208,10 @@
   <div id="viewRecap" hidden>
     <div class="recap">
       <div class="recap-head">
-        <div class="recap-title">Le Top 8 de la communauté</div>
+        <div class="recap-title">Le Top 10 de la communauté</div>
         <span class="live"><span class="dot"></span>En direct</span>
       </div>
-      <div class="recap-sub">Classement par points : 8 pts pour un 1er, 7 pts pour un 2e… 1 pt pour un 8e, cumulés sur tous les votes.</div>
+      <div class="recap-sub">Classement par points : 10 pts pour un 1er, 9 pts pour un 2e… 1 pt pour un 10e, cumulés sur tous les votes.</div>
       <div class="recap-note" id="recapNote"></div>
       <div id="recapList"></div>
       <div class="toolbar"><button class="btn" id="backBtn">← Modifier mon classement</button></div>
@@ -245,7 +245,7 @@ const ITEMS = [
   {id:"lakers",  name:"Kessler · Grimes · Sexton", rumor:"transférés aux Lakers", img:"img/lakers.png", fit:"contain", url:"https://www.basketusa.com/news/852451/avec-walker-kessler-les-lakers-tiennent-leur-pivot/"},
   {id:"harris",  name:"Tobias Harris",         rumor:"transféré aux Spurs",   img:"img/harris.png",  url:"https://www.basketusa.com/news/854524/tobias-harris-arrive-en-renfort-a-san-antonio/"},
 ];
-const SLOTS = 8;
+const SLOTS = 10;
 
 const byId = Object.fromEntries(ITEMS.map(p=>[p.id,p]));
 let pool = ITEMS.map(p=>p.id);
@@ -365,14 +365,14 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{ pool = ITEMS
    VALIDER → ENVOI DU VOTE + ÉCRAN RECAP (Google Sheet via Apps Script)
    Classement communauté par points (Borda) : 1er = SLOTS pts … dernier = 1 pt.
    ================================================================ */
-const VOTED_KEY = 'top8voted_v1';
+const VOTED_KEY = 'nbatop10_voted_v1';
 
 function submitVote(){
   if(!CONFIG.votesUrl) return;
   if(localStorage.getItem(VOTED_KEY)) return;                 // 1 vote par navigateur
   const rk = rankedItems().map((p,i)=>({rank:i+1, id:p.id, name:p.name+' '+p.rumor}));
   if(!rk.length) return;
-  const session = 't8-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const session = 't10-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   try{
     fetch(CONFIG.votesUrl, {method:'POST', mode:'no-cors', keepalive:true,
       headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -456,8 +456,8 @@ const shareUrl = () => HOST_URL || CONFIG.shareUrl || location.href;
 function rankedItems(){ return ranking.filter(Boolean).map(id=>byId[id]); }
 function shareText(){
   const list = rankedItems();
-  if(!list.length) return "Compose ton Top 8 des plus grosses infos du début de Free Agency !";
-  let t = "Mon Top 8 des plus grosses infos du début de Free Agency :\n";
+  if(!list.length) return "Compose ton Top 10 des plus grosses infos du début de Free Agency !";
+  let t = "Mon Top 10 des plus grosses infos du début de Free Agency :\n";
   list.forEach((p,i)=>{ t += `${i+1}. ${p.name} ${p.rumor}\n`; });
   return t.trim();
 }
@@ -491,7 +491,7 @@ async function buildCanvas(){
   const ctx=cv.getContext('2d'); ctx.scale(scale,scale);
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
   ctx.textBaseline='alphabetic';
-  const t1='Top 8 — Plus grosses infos du début de ', t2='Free Agency';
+  const t1='Top 10 — Plus grosses infos du début de ', t2='Free Agency';
   ctx.font='800 20px '+FONT; const w1=ctx.measureText(t1).width, w2=ctx.measureText(t2).width; let tx=(W-(w1+w2))/2;
   ctx.textAlign='left'; ctx.fillStyle=INK; ctx.fillText(t1,tx,52); ctx.fillStyle=RED; ctx.fillText(t2,tx+w1,52);
   ctx.textAlign='center'; ctx.fillStyle=MUT; ctx.font='400 13px '+FONT;
@@ -514,7 +514,7 @@ async function buildCanvas(){
 const canvasToBlob = cv => new Promise(r=>cv.toBlob(r,'image/png'));
 async function downloadImage(){
   const b=document.getElementById('shImg'), old=b.innerHTML; b.disabled=true; b.textContent='Génération…';
-  try{ const cv=await buildCanvas(); const a=document.createElement('a'); a.download='top8-mercato-nba.png'; a.href=cv.toDataURL('image/png'); a.click(); flash('✓ Image téléchargée !'); }
+  try{ const cv=await buildCanvas(); const a=document.createElement('a'); a.download='top10-mercato-nba.png'; a.href=cv.toDataURL('image/png'); a.click(); flash('✓ Image téléchargée !'); }
   catch(err){ flash('Erreur lors de la génération'); console.error(err); }
   finally{ b.disabled=false; b.innerHTML=old; }
 }
@@ -522,9 +522,9 @@ async function shareNative(){
   const b=document.getElementById('shNative'), old=b.innerHTML; b.disabled=true; b.textContent='Préparation…';
   try{
     const cv=await buildCanvas(); const blob=await canvasToBlob(cv);
-    const file=new File([blob],'top8-mercato-nba.png',{type:'image/png'}); const text=shareText()+'\n'+shareUrl();
-    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({title:'Top 8 — Plus grosses infos du début de Free Agency', text, files:[file]});
-    else if(navigator.share) await navigator.share({title:'Top 8 — Plus grosses infos du début de Free Agency', text:shareText(), url:shareUrl()});
+    const file=new File([blob],'top10-mercato-nba.png',{type:'image/png'}); const text=shareText()+'\n'+shareUrl();
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({title:'Top 10 — Plus grosses infos du début de Free Agency', text, files:[file]});
+    else if(navigator.share) await navigator.share({title:'Top 10 — Plus grosses infos du début de Free Agency', text:shareText(), url:shareUrl()});
     else { const a=document.createElement('a'); a.download=file.name; a.href=cv.toDataURL('image/png'); a.click(); flash('✓ Image téléchargée !'); }
   }catch(err){ if(!err || err.name!=='AbortError'){ flash('Partage indisponible'); console.error(err); } }
   finally{ b.disabled=false; b.innerHTML=old; }
